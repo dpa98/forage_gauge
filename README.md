@@ -7,7 +7,7 @@ Estimación de biomasa de pasto seco —fracciones verde y muerta, en g/m²— a
 
 ## 1. Alcance del repositorio
 
-Este repositorio contiene la versión open-source anterior del proyecto. Las métricas reportadas en la sección 6 provienen de una ejecución interna (v1, informe técnico del 15/11/2026) realizada sobre datos y pesos no distribuidos públicamente; los comandos de esta versión no las reproducen exactamente.
+Este repositorio contiene la versión open-source anterior del proyecto. Las métricas reportadas en la sección 5 provienen de una ejecución interna (v1, informe técnico del 15/11/2026) realizada sobre datos y pesos no distribuidos públicamente; los comandos de esta versión no las reproducen exactamente.
 
 ## 2. Descripción
 
@@ -27,11 +27,7 @@ Ejemplo de imagen de entrada utilizada por el modelo:
 
 La selección del checkpoint se realiza con BR2, definido como la media de los R² por objetivo menos 0,1 veces su desviación típica; GR2 corresponde al R² global ponderado. El aporte del código consiste en integrar en un flujo reproducible la construcción de folds, el entrenamiento validado, la inferencia con test-time augmentation de cuatro volteos y el promedio de los pesos `best_ema.pt` de todos los folds, además del registro de métricas por intervalo de peso.
 
-## 3. Publicación
-
-No se dispone de publicación asociada a este repositorio. En consecuencia, no se incluyen cita, DOI ni enlaces oficiales.
-
-## 4. Stack / herramientas
+## 3. Stack / herramientas
 
 - Python
 - PyTorch
@@ -44,7 +40,7 @@ No se dispone de publicación asociada a este repositorio. En consecuencia, no s
 - tqdm
 - Matplotlib para la visualización de las curvas de entrenamiento
 
-## 5. Qué hace el código
+## 4. Qué hace el código
 
 Todos los comandos se ejecutan desde la raíz del repositorio; los módulos se importan de forma plana, no como paquete.
 
@@ -54,9 +50,9 @@ Todos los comandos se ejecutan desde la raíz del repositorio; los módulos se i
 - `python predict.py --csv data/test/test_wide.csv --images_dir data/test --weights_dir checkpoints/v1 --output predictions.csv` genera predicciones promediando los cuatro volteos y todos los pesos `best_ema.pt` encontrados. El CSV de entrada debe contener una columna `id`. Las opciones adicionales son `--batch_size`, `--img_size` y `--token`. La salida contiene `id`, `Dry_Green_g`, `Dry_Dead_g` y `Dry_Total_g`.
 - `python generar_diagramas.py` genera un diagrama estático de la arquitectura; no interviene en el entrenamiento ni en la inferencia.
 
-El script `scripts/plot_metrics.py`, citado en versiones anteriores de este README, no está incluido en la versión pública. Las curvas de la sección 6 se entregan ya generadas en `docs/figures/Figure_1.png`.
+El script `scripts/plot_metrics.py`, citado en versiones anteriores de este README, no está incluido en la versión pública. Las curvas de la sección 5 se entregan ya generadas en `docs/figures/Figure_1.png`.
 
-## 6. Resultados
+## 5. Resultados
 
 La figura siguiente presenta las curvas del fold 0. El panel superior muestra la pérdida de entrenamiento y las métricas BR2/GR2 por época; los paneles inferiores muestran, respectivamente, el R² y el MAE por objetivo. La línea vertical discontinua señala la época con el BR2 máximo.
 
@@ -85,7 +81,7 @@ Las métricas siguientes proceden del informe técnico de la ejecución interna 
 
 El entorno fue Kaggle con GPU T4 ×2 (el script entrena en una sola GPU) y 16 GB de RAM; el entrenamiento de los 3 folds tardó 9 h 39 m 10 s. Los promedios del conjunto de datos empleados en el título de la figura son 123,1 g para Green, 93,6 g para Dead y 216,7 g para Total. El MAE total equivale a aproximadamente el 21 % de la biomasa media; la materia muerta es el objetivo más variable (R² 0,52–0,69) y el error absoluto crece con la biomasa. Con 80 imágenes, estos resultados son provisionales.
 
-## 7. Limitaciones y próximos pasos
+## 6. Limitaciones y próximos pasos
 
 **Limitaciones**
 
@@ -103,7 +99,7 @@ El entorno fue Kaggle con GPU T4 ×2 (el script entrena en una sola GPU) y 16 GB
 4. Analizar la robustez ante lluvia, heladas y periodos secos: comprobar si la misma coloración implica la misma densidad de materia seca.
 5. Validar la calidad y representatividad de los datos antes de escalar a imágenes de dron.
 
-## 8. Instalación y uso
+## 7. Instalación y uso
 
 Se requiere Python con `pip`. El entrenamiento y la inferencia funcionan en CPU, aunque el uso de GPU CUDA permite activar precisión mixta. Para cargar el backbone desde Hugging Face es necesario aceptar la licencia del modelo y definir `HF_TOKEN`; este paso no es necesario si `backbone_weights/` ya contiene el modelo. No se incluye `requirements.txt`: `install_deps.py` instala las dependencias principales y el resto se añade según los scripts que se vayan a ejecutar.
 
@@ -121,7 +117,7 @@ python train.py --version v1 --epochs 100 --batch_size 2 --img_size 1024
 python predict.py --csv data/test/test_wide.csv --images_dir data/test --weights_dir checkpoints/v1 --output predictions.csv
 ```
 
-## 9. Estructura del proyecto
+## 8. Estructura del proyecto
 
 ```text
 .
@@ -154,7 +150,7 @@ python predict.py --csv data/test/test_wide.csv --images_dir data/test --weights
 
 No incluidos en esta versión pública: `requirements.txt`, `config.py`, `trainer.py`, `scripts/plot_metrics.py`, `utils/paths.py`, `utils/plotting.py` y los directorios generados o locales `data/`, `checkpoints/`, `logs/` y `backbone_weights/`. El código actual no importa `config.py` ni `trainer.py`; aparecían en la estructura de versiones anteriores del README.
 
-## 10. Autor y contacto
+## 9. Autor y contacto
 
 Autor: Daniel Polo Alcoba.  
 Correo: dpoloalcoba@gmail.com.

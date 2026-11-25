@@ -1,4 +1,4 @@
-# GrassGauge
+# ForageGauge
 
 Estimación de biomasa de pasto seco —fracciones verde y muerta, en g/m²— a partir de una única fotografía cenital de pastura mediante un modelo de visión por computador basado en DINOv3 con adaptación eficiente de parámetros.
 

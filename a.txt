@@ -1,0 +1,70 @@
+INFORME TÉCNICO - GRASSGAUGE V1
+Modelo: DINOv3 ViT-L/16 + LoRA/DoRA
+Datos: 80 imágenes etiquetadas
+Validación: 3-fold CV
+Hardware: GPU T4 x2, RAM 16 GB
+Fecha: 15/11/2026
+-------------------------------------------------------------------------------------------
+1. RESUMEN EJECUTIVO
+-------------------------------------------------------------------------------------------
+Prototipo de regresión que estima biomasa seca verde y muerta (g/m²) desde una fotografía RGB cenital, para monitoreo de pasturas.
+
+En validación cruzada de 3 folds se obtiene BR2 0.680 +/- 0.048 y GR2 0.778, con un MAE total de 46.3 g/m² sobre una media de 217 g/m². El modelo captura señal útil y es viable como prototipo, pero con 80 imágenes el resultado es provisional.
+-------------------------------------------------------------------------------------------
+2. DATOS Y PREPROCESAMIENTO
+-------------------------------------------------------------------------------------------
+- Origen: 80 fotos de pastura con medición de campo; los targets se derivan de peso húmedo, materia seca y proporción verde/muerta.
+- Distribución: verde 123 +/- 85 g/m² (23-426); muerta 94 +/- 68 g/m² (5-270).
+- Splits: 3 folds estratificados por bins de biomasa verde y muerta, con aprox. 29-36% de validación por fold. En cada fold, el modelo entrena sin ver las fotos de validación.
+- Transformaciones: resize a 1024x1024; en train, flips H/V, rotación 90°, rotación +/-5° y color jitter; normalización ImageNet. En validación, solo resize y normalización.
+- Resolución: 1024x1024 es adecuada para la textura del pasto, pero poco realista en producción masiva: procesar miles de imágenes a esa resolución implica alto tiempo y coste. Debería evaluarse 512x512 o 768x768 con reentrenamiento.
+-------------------------------------------------------------------------------------------
+3. ARQUITECTURA Y ENTRENAMIENTO
+-------------------------------------------------------------------------------------------
+- Backbone: DINOv3 ViT-L/16 congelado con adaptadores LoRA/DoRA (r=32, alpha=64) en q/k/v/o. 314.8M parámetros totales, 11.65M entrenables (3.7%).
+- Cabeza: dos bloques convolucionales ligeros con gating (LayerNorm -> gate sigmoide -> convolución depthwise k=5 -> proyección -> residual), pooling global y dos MLPs con activación positiva (ELU+1.001) para las salidas verde y muerta.
+- Pérdida: Tweedie (p=1.2), ponderada 0.4 verde / 0.6 muerta.
+- Optimización: AdamW, LR 1e-4 en backbone / 1e-3 en cabezas, weight decay 1e-3, grad clip 1.0. Batch 2 x acumulación 4 = batch efectivo 8; AMP fp16, EMA 0.99 y gradient checkpointing.
+- Schedulers: warmup de 5 épocas y ReduceLROnPlateau sobre BR2 (factor 0.1, paciencia 10). Máximo 100 épocas, parada temprana con paciencia 20. Checkpoint final: EMA del mejor BR2.
+- Hardware y tiempo: entorno Kaggle T4 x2; el script entrena en una sola GPU. Tiempo total reportado: 9h 39m 10s para los 3 folds.
+-------------------------------------------------------------------------------------------
+4. RESULTADOS Y EVALUACIÓN
+-------------------------------------------------------------------------------------------
+Las métricas se calculan sobre imágenes de validación no vistas durante el entrenamiento.
+
+Métrica                    Modelo (media +/- DE, 3 folds)
+-------------------------  ------------------------------
+BR2 (mayor es mejor)       0.680 +/- 0.048
+GR2 (mayor es mejor)       0.778 +/- 0.082
+R² verde                   0.727 +/- 0.175
+R² muerta                  0.621 +/- 0.089
+R² total                   0.721 +/- 0.101
+MAE verde (g/m²)           30.2 +/- 9.2
+MAE muerta (g/m²)          28.2 +/- 2.8
+MAE total (g/m²)           46.3 +/- 11.8
+RMSE total (g/m²)          59.7 +/- 15.6
+RMSLE total                0.266 +/- 0.043
+
+Fold  Mejor época         BR2    GR2    MAE total  RMSE total
+----  ------------------  -----  -----  ---------  ----------
+0     55 (parada en 75)   0.679  0.767  49.6       60.9
+1     100 (sin parada)    0.729  0.865  33.2       43.6
+2     86 (parada en 100)  0.632  0.703  56.1       74.8
+
+Lectura: el error total equivale a aprox. 21% de la biomasa media. La materia muerta es el target más inestable (R² 0.52-0.69; especialmente en el fold 1) y el error absoluto crece con la biomasa.
+-------------------------------------------------------------------------------------------
+5. LIMITACIONES Y PRÓXIMOS PASOS
+-------------------------------------------------------------------------------------------
+Limitaciones
+1. N=80: alta varianza entre folds (R² verde 0.54-0.88; BR2 0.63-0.73). Los resultados no son concluyentes.
+2. Resolución y coste: 1024x1024 no es realista para procesar miles de imágenes en producción.
+3. Altura del pasto: es una variable que el modelo no conoce; solo puede inferir referencias visuales.
+4. Clima: el modelo no fue entrenado con situaciones como heladas o escarcha, varios días sin llover o lluvia reciente. Aprende a partir de color, textura, densidad y sombras; por eso es crítico evaluar qué ocurre en esas condiciones.
+5. Drones: volumen de datos a procesar, calidad y resolución de las imágenes, y hardware necesario.
+
+Próximos pasos
+1. N=80: ampliar el dataset a por lo menos 800-1000 imágenes e incluir potreros con distintas condiciones de humedad.
+2. Resolución y coste: reducir la resolución por debajo de 1024x1024 (por ejemplo, 768x768 o 512x512) y medir el impacto en precisión y latencia.
+3. Altura del pasto: considerar introducir esta variable, determinante cuando el pasto no deja ver la referencia del suelo. Antes de recolectar ese tipo de datos, evaluar si el modelo realmente la necesita usando imágenes con distintas alturas y sin suelo visible.
+4. Clima: la preocupación es de producción: ¿qué pasa si se envía un dron a una finca y está lloviendo? ¿El pasto tiene el mismo color cuando acaba de llover que cuando no ha llovido por varios días? ¿La densidad de masa seca varía con el color, o pueden dos pastos del mismo color tener distinta densidad de masa seca?
+5. Drones: la mayor preocupación es la calidad y representatividad del set de datos; con datos suficientes, el modelo debería adaptarse rápidamente a imágenes de dron.

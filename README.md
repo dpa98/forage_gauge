@@ -11,6 +11,10 @@ La cuantificación de la biomasa de pastura mediante muestreo de campo es labori
 
 El conjunto de datos local contiene 72 imágenes etiquetadas con mediciones de laboratorio de ambos componentes, registradas en `data/raw/train_wide.csv` y almacenadas en `data/train/`. Se dispone además de 8 imágenes etiquetadas independientes, registradas en `data/test/test_wide.csv` y almacenadas en `data/test/`, que se mantuvieron separadas del conjunto anterior para la verificación del modelo. La validación se organiza sobre las 72 imágenes de entrenamiento en tres particiones estratificadas por intervalos de igual anchura sobre las dos variables objetivo, con semilla fija 16999. El modelo emplea el backbone `facebook/dinov3-vitl16-pretrain-lvd1689m`, adaptado con LoRA/DoRA sobre las proyecciones `q`, `k`, `v` y `o` (rango 32, alfa 64, dropout 0,01). Sobre los tokens de salida se aplican dos bloques `LocalMambaBlock`, un promedio global y dos cabezas de regresión con activación positiva. La optimización utiliza pérdida de Tweedie con p = 1,2 y pesos 0,4 y 0,6; normalización de etiquetas según el máximo del conjunto de entrenamiento de cada fold multiplicado por 1,1; precisión mixta; media móvil exponencial del modelo; calentamiento inicial; reducción de la tasa de aprendizaje por meseta y parada temprana.
 
+Ejemplo de imagen de entrada utilizada por el modelo:
+
+![Fotografía cenital de pastura utilizada como entrada del modelo.](docs/figures/IMG_20260811_155344_n.jpg)
+
 La selección del checkpoint se realiza con BR2, definido como la media de los R² por objetivo menos 0,1 veces su desviación típica; GR2 corresponde al R² global ponderado. El aporte del código consiste en integrar en un flujo reproducible la construcción de folds, el entrenamiento validado, la inferencia con test-time augmentation de cuatro volteos y el promedio de los pesos `best_ema.pt` de todos los folds, además del registro de métricas por intervalo de peso.
 
 ## 3. Publicación
@@ -43,7 +47,7 @@ Todos los comandos se ejecutan desde la raíz del repositorio; los módulos se i
 
 La figura siguiente presenta las curvas del fold 0. El panel superior muestra la pérdida de entrenamiento y las métricas BR2/GR2 por época; los paneles inferiores muestran, respectivamente, el R² y el MAE por objetivo. La línea vertical discontinua señala la época con el BR2 máximo.
 
-![Curvas de entrenamiento del fold 0: pérdida de entrenamiento y BR2/GR2 por época (panel superior), R² por objetivo (inferior izquierdo) y MAE por objetivo (inferior derecho); la línea vertical marca la mejor época según BR2.](docs/figures/curvas_entrenamiento_fold_0.png)
+![Curvas de entrenamiento del fold 0: pérdida de entrenamiento y BR2/GR2 por época (panel superior), R² por objetivo (inferior izquierdo) y MAE por objetivo (inferior derecho); la línea vertical marca la mejor época según BR2.](docs/figures/Figure_1.png)
 
 Los valores corresponden a la última ejecución registrada en `logs/v1/fold_*/metrics.csv`, que es la utilizada para la visualización.
 
@@ -108,7 +112,8 @@ python scripts/plot_metrics.py --version v1 --fold 0
 │   ├── train/
 │   └── test/
 ├── docs/figures/
-│   └── curvas_entrenamiento_fold_0.png
+│   ├── Figure_1.png
+│   └── IMG_20260811_155344_n.jpg
 ├── logs/v1/
 │   └── fold_{0,1,2}/
 ├── scripts/

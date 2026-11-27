@@ -1,7 +1,5 @@
 # ForageGauge
 
-Estimación de biomasa de pasto seco —verde y muerta, en g/m²— a partir de una única fotografía cenital de pastura, mediante DINOv3 con adaptación LoRA/DoRA.
-
 [![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 

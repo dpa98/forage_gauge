@@ -17,11 +17,11 @@ El objetivo es predecir materia verde seca, materia muerta seca y su suma, en g/
 
 ### 2.1 Flujo de trabajo
 
-Las 72 imágenes de entrenamiento se dividen en 3 folds estratificados por ambos objetivos. Cada fold se entrena por separado y el checkpoint se selecciona con BR2, definido como la media de los R² por objetivo menos 0,1 veces su desviación típica. Para inferir, se promedian los pesos de los tres folds y se aplica aumento de cuatro volteos.
+Las 72 imágenes de entrenamiento se dividen en 3 folds estratificados por ambos objetivos. Cada fold se entrena por separado y el checkpoint se selecciona con BR2, definido como la media de los R² por objetivo menos 0,1 veces su desviación típica. Para inferir, se promedian los pesos de los tres folds.
 
 ### 2.2 Modelo
 
-Backbone DINOv3 ViT-L/16 congelado, adaptado con LoRA/DoRA (r = 32, alfa = 64) en las proyecciones `q`, `k`, `v` y `o`: 314,8 M parámetros totales y 11,65 M entrenables (3,7 %). La versión pública emplea dos bloques `LocalMambaBlock` y cabezas de regresión con activación positiva; la ejecución interna de la que proceden los resultados usa una cabeza convolucional con compuerta.
+Backbone DINOv3 ViT-L/16 congelado, adaptado con LoRA/DoRA (r = 32, alfa = 64) en las proyecciones `q`, `k`, `v` y `o`: 314,8 M parámetros totales y 11,65 M entrenables (3,7 %).
 
 ### 2.3 Entrenamiento
 

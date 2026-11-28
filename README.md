@@ -42,36 +42,11 @@ Métricas calculadas sobre imágenes de validación no vistas durante el entrena
 
 El MAE total de 46,3 g/m² supone aproximadamente el 21 % de la biomasa media (216,7 g/m²). Con solo 80 imágenes los resultados son provisionales: la materia muerta es el objetivo más variable y el error crece con la biomasa.
 
-## 4. Instalación y uso
+## 4. Código y uso
 
-### 4.1 Requisitos
-
-Se necesita Python y `pip`. El flujo funciona en CPU, aunque se recomienda GPU CUDA. Para descargar el backbone `facebook/dinov3-vitl16-pretrain-lvd1689m` hay que aceptar su licencia en Hugging Face y definir `HF_TOKEN`, salvo que los pesos ya estén en `backbone_weights/`. Los datos, pesos y logs no se incluyen en este repositorio.
-
-```bash
-python install_deps.py
-pip install numpy tqdm iterstrat matplotlib
-python download_weights.py
-```
-
-### 4.2 Flujo mínimo
-
-```bash
-python create_folds.py --input data/raw/train_wide.csv --output_dir ./data/folds/folds_v1 --n_splits 3
-python train.py --version v1 --epochs 100 --batch_size 2 --img_size 1024
-python predict.py --csv data/test/test_wide.csv --images_dir data/test --weights_dir checkpoints/v1 --output predictions.csv
-```
-
-La salida de `predict.py` es un CSV con `id`, `Dry_Green_g`, `Dry_Dead_g` y `Dry_Total_g`.
-
-### 4.3 Estructura
-
-```text
-create_folds.py, train.py, predict.py          # flujo principal
-model.py, dataset.py, loss.py, metrics.py, transforms.py
-download_weights.py, install_deps.py, merge_weight.py
-docs/figures/                                  # imágenes del README
-utils/log_setup.py
-```
+El código de la ejecución v1 descrita arriba es privado y no se distribuye.
+Este repositorio contiene la versión open-source anterior; su instalación y uso
+se documentan en `GUIDE.md` y `README_SETUP.md`. Los datos, pesos y logs no se
+incluyen en este repositorio.
 
 Daniel Polo Alcoba — dpoloalcoba@gmail.com
